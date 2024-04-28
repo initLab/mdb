@@ -1,23 +1,24 @@
-import { SerialPort } from 'serialport';
+#!/usr/bin/env node
+
 import { ReadlineParser } from '@serialport/parser-readline';
+import { SequentialSerial } from './serialport/index.js';
+import { hardwareVersion, reset, softwareVersion } from './qibixx/commands.js';
 
-const sleep = async ms => new Promise(resolve => setTimeout(resolve, ms));
-
-const port = new SerialPort({
+console.log('Opening port');
+const port = await SequentialSerial.create({
     path: '/dev/ttyACM0',
     baudRate: 115200,
 });
+console.log('Port opened');
+
 const parser = port.pipe(new ReadlineParser({
     delimiter: '\r\n',
 }));
 parser.on('data', parseLine);
-port.write('X,0\n');
-await sleep(100);
-port.write('V\n');
-await sleep(100);
-port.write('H\n');
-await sleep(100);
-port.write('X,1\n');
+await port.writeAndDrain(reset);
+await port.writeAndDrain(softwareVersion);
+await port.writeAndDrain(hardwareVersion);
+await port.writeAndDrain('X,1\n');
 
 function parseLine(line) {
     const parts = line.split(',');
