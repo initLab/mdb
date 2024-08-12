@@ -1,0 +1,2 @@
+# /etc/udev/rules.d/99-user.rules
+KERNEL=="ttyACM*", SUBSYSTEM=="tty", SUBSYSTEMS=="usb", ATTRS{idProduct}=="0bd7", ATTRS{idVendor}=="16d0", ATTRS{manufacturer}=="Qibixx", ATTRS{product}=="MDB-HAT", SYMLINK+="mdb-hat"

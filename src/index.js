@@ -3,19 +3,37 @@
 import { ReadlineParser } from '@serialport/parser-readline';
 import { SequentialSerial } from './serialport/index.js';
 import { hardwareVersion, reset, softwareVersion } from './qibixx/commands.js';
+import { sleep } from './util/index.js';
 
-console.log('Opening port');
-const port = await SequentialSerial.create({
-    path: '/dev/ttyACM0',
-    baudRate: 115200,
-});
-console.log('Port opened');
+async function connectPort(path) {
+    console.log('Opening port');
+    const port = await SequentialSerial.create({
+        path,
+        baudRate: 115200,
+    });
+    console.log('Port opened');
 
+    return port;
+}
+
+async function resetDevice(path) {
+    const port = await connectPort(path);
+    await port.writeAndDrain(reset);
+    await port.closeAsync();
+}
+
+const path = '/dev/mdb-hat';
+
+// Reset device to ensure state is consistent
+await resetDevice(path);
+await sleep(1_000);
+
+// Connect to the device after it has been reset
+const port = await connectPort(path);
 const parser = port.pipe(new ReadlineParser({
     delimiter: '\r\n',
 }));
 parser.on('data', parseLine);
-await port.writeAndDrain(reset);
 await port.writeAndDrain(softwareVersion);
 await port.writeAndDrain(hardwareVersion);
 // await port.writeAndDrain('X,1\n');
