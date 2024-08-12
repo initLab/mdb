@@ -39,6 +39,7 @@ await port.writeAndDrain(hardwareVersion);
 // await port.writeAndDrain('X,1\n');
 
 function parseLine(line) {
+    console.log('reading', JSON.stringify(line));
     const parts = line.split(',');
 
     switch (parts[0]) {

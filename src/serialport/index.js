@@ -19,7 +19,7 @@ export class SequentialSerial extends SerialPort {
     }
 
     async writeAndDrain(chunk, encoding) {
-        console.log('writing', chunk);
+        console.log('writing', JSON.stringify(chunk));
         const isOkToContinue = await promisify(this.write).call(this, chunk, encoding);
 
         if (!isOkToContinue) {
