@@ -150,3 +150,40 @@ export const setCashlessMasterParameter = (parameter, value) => command(`D,SETCO
  */
 export const enableMdbSniffing = command('X,1');
 export const disableMdbSniffing = command('X,0');
+
+/**
+ * Enable/Disable Cashless Master
+ * Prior to initiating transactions with the MDB Bus, it is necessary to Enable the Cashless Master. Specifically for Cashless Devices, in addition to "Idle" Mode, it is also possible to enable the Device in "Always Idle" Mode.
+ *
+ * "Authorization First" First Mode - Vending sessions are initiated by the Cashless Peripherals (Meaning that in a real terminal, the user would first have to swipe his card to pre-authorize a certain amount, and then select the product. Further information in Cashless Slave).
+ *
+ * "Always Idle"/Selection First Mode (direct vend), the Master can request the credit to the Cashless Slave first, and therefore it will start the session (In a real terminal, the user would select the product first on the machine, and then swipe the card to confirm the requested amount).
+ */
+export const disableCashlessMaster = command('D,0');
+export const enableCashlessMasterAuthorizeFirst = command('D,1');
+export const enableCashlessMasterAlwaysIdle = command('D,2');
+
+/**
+ * Start polling for the Cashless Reader
+ * Once the Master and Slave are enabled (please see instructions to enable Slave Peripherals in Cashless Peripheral) , the master can start polling the Cashless Reader, by issuing the command below.
+ *
+ * This instruction must be issued every time the Cashless Master is enabled or booted.
+ *
+ * Answer:
+ * d,STATUS,IDLE
+ * d,ERR,"-1" # Cashless Slave is not enabled to start polling
+ */
+export const startPollingCashlessReader = command('D,READER,1');
+
+/**
+ * Request Credit
+ * The following command is used to send a request to the Cashless Slave. When the Cashless Master is configured in "Idle" Mode, this command should be preceded by a start session command (further info in Cashless Peripheral ). If the Cashless Master is configured in "Always Idle" Mode, the instruction below will trigger a "Start" operation on the slave.
+ */
+
+export const requestCredit = (amount, product) => command(`D,REQ,${amount},${product}`);
+
+/**
+ * Cancel a pending vending request
+ */
+export const cancelPendingVendingRequest = command('D,REQ,-1');
+
