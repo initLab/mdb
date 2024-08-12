@@ -187,3 +187,70 @@ export const requestCredit = (amount, product) => command(`D,REQ,${amount},${pro
  */
 export const cancelPendingVendingRequest = command('D,REQ,-1');
 
+/**
+ * End and finalize a transaction
+ */
+export const endAndFinalizeTransaction = (softwareVersion, productId) => command(`D,END${
+    softwareVersion.major > 3 || softwareVersion.major === 3 && softwareVersion.minor >= 8 ?
+        `,${productId}` : ''
+}`);
+
+/**
+ * End and revert a transaction
+ */
+export const endAndRevertTransaction = command('D,END,-1');
+
+/**
+ * Cashless master answers
+ *
+ * D,ERR,"cashless master is on"	Master instance was already ON
+ * d,STATUS,RESET	Master/VMC instance was initialized and there are no peripherals connected to it
+ * d,STATUS,INIT,1	There is a peripheral on the bus and the master instance is polling it
+ * d,STATUS,IDLE	The reader is enabled and VMC is Idle (waiting for a vending cycle to be started)
+ * d,STATUS,CREDIT,-1	The peripheral has started the session and a payment method with has been inserted
+ * d,STATUS,RESULT,-1	The terminal has denied the vending session. E.g. due to lack of funds in the credit card.
+ * d,STATUS,VEND	A vending request has been made by the master instance and it is waiting for the slave to accept it
+ * d,STATUS,RESULT,1,1.50	The peripheral has accepted 1.50€ for the VMC vending request
+ * d,ERR,-1	Command not applicable in current state
+ */
+
+/**
+ * Get Cashless Status From Master
+ *
+ * Answer:
+ * d,STATUS,<status>,#,<featurelevel>,<CurrCode>,<scalefac>,<decimals>,<timeout>,<flags>,<direct_vend_mode>
+ *
+ * <featurelevel>,<CurrCode>,<scalefac>,<decimals>,<timeout> and <flags> <direct_vend_mode>are all part of the information exchanged between the Cashless Terminal and the VMC during setup. Please refer to section 7.4.2 of the MDB Specification for more details about these fields.
+ *
+ * status: The state of the Cashless Reader:
+ * INIT: The reader is active but waiting to be enabled (meaning it is not yet ready to accept payments)
+ * IDLE: The reader is Enabled, waiting for a session to be started(If Idle/Authorization First), or a vend request from the machine(If always Idle/Selection First).
+ * VEND: The reader has received a request for a value and is processing it (the VMC is waiting for the reader to confirm the transaction).
+ * RESULT: The result of the vend request. In other words, tells if the reader approved the request. If so, the result will be d,STATUS,RESULT,1,<credit>,#,.....
+ *
+ * featurelevel: Reader announced MDB Feature level
+ * CurrCode: Reader Currency Code
+ * scalefac: Country/Currency Code
+ * decimals: Decimal Places
+ * timeout: Application Maximum Response time (s)
+ * flags: Miscellaneous options announced by the reader during the setup
+ * direct_vend___mode: It will display 1 or 2 depending if you start with D,1 or D,2.
+ *
+ * NOTE: Even if you start with D,2 but the machine does not support it, it will display 1
+ */
+
+export const getCashlessStatusFromMaster = command('D,STATUS');
+
+/**
+ * Examples
+ *
+ * d,STATUS,INIT,1,#,3,1756,1,2,30,8 Reader level 3, <!--currency code Swiss francs (756),Scaling factor 1,2 decimal places, 30s timeout, and bit 3 of flags enabled=Supports Cash Sale subcommand -->
+ * (Reader enabled during this interval ...)
+ * d,STATUS,IDLE,#,3,1756,1,2,30,8
+ * (Vend Request during this interval ...)
+ * d,STATUS,VEND,#,3,1756,1,2,30,8
+ * (Vend Approved by the reader and confirmed by the VMC (MASTER) during this interval ... )
+ * STATUS,IDLE,#,3,1756,1,2,30,8
+ */
+
+
