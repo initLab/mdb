@@ -18,7 +18,7 @@ parser.on('data', parseLine);
 await port.writeAndDrain(reset);
 await port.writeAndDrain(softwareVersion);
 await port.writeAndDrain(hardwareVersion);
-await port.writeAndDrain('X,1\n');
+// await port.writeAndDrain('X,1\n');
 
 function parseLine(line) {
     const parts = line.split(',');
