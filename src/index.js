@@ -2,7 +2,7 @@
 
 import { ReadlineParser } from '@serialport/parser-readline';
 import { SequentialSerial } from './serialport/index.js';
-import { hardwareVersion, reset, softwareVersion } from './qibixx/commands.js';
+import { hardwareVersion, reset, softwareVersion } from './qibixx/commands/general.js';
 import { sleep } from './util/index.js';
 
 async function connectPort(path) {
