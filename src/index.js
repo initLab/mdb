@@ -4,6 +4,7 @@ import { ReadlineParser } from '@serialport/parser-readline';
 import { SequentialSerial } from './serialport/index.js';
 import { hardwareVersion, reset, softwareVersion } from './qibixx/commands/general.js';
 import { sleep } from './util/index.js';
+import { busReset, requestCommandGroup } from './qibixx/commands/master/generic.js';
 
 async function connectPort(path) {
     console.log('Opening port');
@@ -120,6 +121,7 @@ async function getDevice(path) {
 
     return {
         getVersions: () => versions,
+        sendCommand: async cmd => port.writeAndDrain(cmd),
     };
 }
 
@@ -133,3 +135,22 @@ await sleep(1_000);
 const device = await getDevice(path);
 await sleep(1_000);
 console.log(device.getVersions());
+await device.sendCommand(busReset);
+await sleep(500);
+await device.sendCommand(requestCommandGroup(0x08));
+await sleep(500);
+await device.sendCommand(requestCommandGroup(0x09));
+await sleep(500);
+await device.sendCommand(requestCommandGroup(0x0F, [0x00]));
+await sleep(500);
+await device.sendCommand(requestCommandGroup(0x0F, [0x01, 0x00, 0x00, 0x00, 0x06]));
+await sleep(500);
+await device.sendCommand(requestCommandGroup(0x0F, [0x05]));
+await sleep(500);
+await device.sendCommand(requestCommandGroup(0x0A));
+await sleep(500);
+await device.sendCommand(requestCommandGroup(0x0C, [0xFF, 0xFF, 0xFF, 0xFF]));
+
+setInterval(async () => {
+    await device.sendCommand(requestCommandGroup(0x0B));
+}, 1_000);
