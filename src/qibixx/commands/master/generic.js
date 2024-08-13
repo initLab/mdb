@@ -1,4 +1,4 @@
-import { command } from '../util.js';
+import { command, toHexByte } from '../util.js';
 
 /**
  * Master Command Group
@@ -14,7 +14,10 @@ export const disableGenericMaster = command('M,0');
  * Request Command Group (used for Master implementation)
  * MDB Generic Master sends request to the Bus using "R" command set. These commands have the following structure.
  */
-export const requestCommandGroup = (slave, data) => command(`R,${slave},${data}`);
+export const requestCommandGroup = (slave, data = []) => {
+    const hexData = data.map(toHexByte).join('');
+    return command(`R,${toHexByte(slave)}${hexData.length ? `,${hexData}` : ''}`);
+};
 
 /**
  * Issue a bus reset condition to the MDB Bus
