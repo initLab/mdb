@@ -88,11 +88,29 @@ async function getDevice(path) {
                 console.log(parts[2], parts[1], parts[3], parts[4]);
                 break;
             case 'm':
-                if (parts[1] === 'ACK') {
-                    console.log('Master mode enabled');
+                switch (parts[1]) {
+                    case 'ACK':
+                        console.log('Success on enable/disable master mode');
+                        break;
+                    case 'NACK':
+                        console.log('Unknown parameter on master control');
+                        break;
+                    default:
+                        console.log('Unknown response on master control: ', parts);
+                        break;
                 }
-                else {
-                    console.log('Master mode disabled');
+                break;
+            case 'p':
+                switch (parts[1]) {
+                    case 'ACK':
+                        console.log('Slave device acknowledged the command');
+                        break;
+                    case 'NACK':
+                        console.log('Slave device did not answer the command');
+                        break;
+                    default:
+                        console.log('Slave device answered with command: ', parts);
+                        break;
                 }
                 break;
             default:
