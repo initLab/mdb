@@ -1,34 +1,11 @@
 #!/usr/bin/env node
 
 import { ReadlineParser } from '@serialport/parser-readline';
-import { SequentialSerial } from './serialport/index.js';
-import { hardwareVersion, reset, softwareVersion } from './qibixx/commands/general.js';
+import { hardwareVersion, softwareVersion } from './qibixx/commands/general.js';
 import { sleep } from './util/index.js';
 import { busReset, requestCommandGroup } from './qibixx/commands/master/generic.js';
-
-async function connectPort(path) {
-    console.log('Opening port');
-    const port = await SequentialSerial.create({
-        path,
-        baudRate: 115200,
-    });
-    console.log('Port opened');
-
-    return port;
-}
-
-async function resetDevice(path) {
-    const port = await connectPort(path);
-    await port.writeAndDrain(reset);
-    await port.closeAsync();
-}
-
-const toInt = str => parseInt(str, 10);
-
-function parseVersion(str) {
-    const [ major, minor, patch, build] = str.split('.').map(toInt);
-    return { major, minor, patch, build };
-}
+import { connectPort, resetDevice } from './qibixx/index.js';
+import { parseVersion } from './qibixx/util.js';
 
 async function getDevice(path) {
     const versions = {
