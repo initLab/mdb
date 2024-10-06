@@ -3,7 +3,7 @@
 import { ReadlineParser } from '@serialport/parser-readline';
 import { hardwareVersion, softwareVersion } from './qibixx/commands/general.js';
 import { sleep } from './util/index.js';
-import { busReset, requestCommandGroup } from './qibixx/commands/master/generic.js';
+import { busReset, enableGenericMaster, requestCommandGroup } from './qibixx/commands/master/generic.js';
 import { connectPort, resetDevice } from './qibixx/index.js';
 import { parseVersion } from './qibixx/util.js';
 
@@ -35,7 +35,7 @@ async function getDevice(path) {
     parser.on('data', parseLine);
     await port.writeAndDrain(softwareVersion);
     await port.writeAndDrain(hardwareVersion);
-    await port.writeAndDrain('M,1\n');
+    await port.writeAndDrain(enableGenericMaster);
 
     function parseLine(line) {
         console.log('reading', JSON.stringify(line));
