@@ -7,6 +7,8 @@ import { busReset, enableGenericMaster, requestCommandGroup } from './qibixx/com
 import { connectPort, resetDevice } from './qibixx/index.js';
 import { parseVersion } from './qibixx/util.js';
 
+let response = null;
+
 async function getDevice(path) {
     const versions = {
         software: {
@@ -82,12 +84,15 @@ async function getDevice(path) {
                 switch (parts[1]) {
                     case 'ACK':
                         console.log('Slave device acknowledged the command');
+                        response = true;
                         break;
                     case 'NACK':
                         console.log('Slave device did not answer the command');
+                        response = false;
                         break;
                     default:
                         console.log('Slave device answered with command: ', parts);
+                        response = Buffer.from(parts[1], 'hex');
                         break;
                 }
                 break;
@@ -114,20 +119,71 @@ await sleep(1_000);
 console.log(device.getVersions());
 await device.sendCommand(busReset);
 await sleep(500);
-await device.sendCommand(requestCommandGroup(0x08));
-await sleep(500);
-await device.sendCommand(requestCommandGroup(0x09));
-await sleep(500);
-await device.sendCommand(requestCommandGroup(0x0F, [0x00]));
-await sleep(500);
-await device.sendCommand(requestCommandGroup(0x0F, [0x01, 0x00, 0x00, 0x00, 0x06]));
-await sleep(500);
-await device.sendCommand(requestCommandGroup(0x0F, [0x05]));
-await sleep(500);
-await device.sendCommand(requestCommandGroup(0x0A));
-await sleep(500);
-await device.sendCommand(requestCommandGroup(0x0C, [0xFF, 0xFF, 0xFF, 0xFF]));
+// await coinChanger();
+await billValidator();
 
-setInterval(async () => {
-    await device.sendCommand(requestCommandGroup(0x0B));
-}, 1_000);
+async function coinChanger() {
+    await device.sendCommand(requestCommandGroup(0x08));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x09));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x0F, [0x00]));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x0F, [0x01, 0x00, 0x00, 0x00, 0x06]));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x0F, [0x05]));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x0A));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x0C, [0xFF, 0xFF, 0xFF, 0xFF]));
+    await sleep(500);
+
+    setInterval(async () => {
+        await device.sendCommand(requestCommandGroup(0x0B));
+    }, 1_000);
+}
+
+async function billValidator() {
+    await device.sendCommand(requestCommandGroup(0x30));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x33));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x31));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x37, [0x00]));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x37, [0x02]));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x37, [0x01, 0x00, 0x00, 0x00, 0x02]));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x36));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x34, [0xFF, 0xFF, 0xFF, 0xFF]));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x37, [0x03, 0x00, 0x02]));
+    await sleep(500);
+    await device.sendCommand(requestCommandGroup(0x37, [0x05]));
+    await sleep(500);
+    // await device.sendCommand(requestCommandGroup(0x37, [0x06, 0x01, 0x00, 0x02]));
+    // await sleep(500);
+
+
+    setInterval(async () => {
+        response = null;
+        await device.sendCommand(requestCommandGroup(0x33));
+        await sleep(100);
+
+        if (typeof response !== 'object') {
+            return;
+        }
+
+        for (const b of response) {
+            if ((b & 0xF0) === 0x90) {
+                const type = b & 0x0F;
+                console.log('Inserted banknote of type ' + type);
+                await device.sendCommand(requestCommandGroup(0x35, [0x00]));
+                console.log('Returned');
+            }
+        }
+    }, 1_000);
+}
