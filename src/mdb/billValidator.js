@@ -11,7 +11,7 @@ export function parseSetupResponse(hex) {
     const countryCurrencyCode = parseInt(hex.substring(2, 6), 10); // BCD encoding
 
     return {
-        billValidatorFeatureLevel: bytes.readUInt8(0),
+        billValidatorFeatureLevel: bytes.readUInt8(),
         countryCode: countryCurrencyCode <= 999 ? countryCurrencyCode : null,
         currencyCode: countryCurrencyCode >= 1000 && countryCurrencyCode <= 1999 ?
             countryCurrencyCode - 1000 : null,
@@ -25,3 +25,16 @@ export function parseSetupResponse(hex) {
 }
 
 // console.log(parseSetupResponse('021975006402012cffffff02050a14326400000000000000000000'));
+
+export function parseStackerResponse(hex) {
+    const bytes = hexToBuffer(hex);
+    const response = bytes.readUInt16BE();
+
+    return {
+        stackerIsFull: (response & 0x8000) === 0x8000,
+        numberOfBills: response & 0x7FFF,
+    };
+}
+
+// console.log(parseStackerResponse('0014'));
+// console.log(parseStackerResponse('8164'));
