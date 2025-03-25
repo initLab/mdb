@@ -1,5 +1,3 @@
-import { command } from './util.js';
-
 /**
  * Retrieve Version Information
  *
@@ -10,7 +8,7 @@ import { command } from './util.js';
  * s.s.s.s = software version
  * xxxxxxxx = CPU ID
  */
-export const softwareVersion = command('V');
+export const softwareVersion = 'V';
 
 /**
  * Retrieve hardware info
@@ -22,7 +20,7 @@ export const softwareVersion = command('V');
  * x.x is the hardware version
  * yyyy are capabilities
  */
-export const hardwareVersion = command('H');
+export const hardwareVersion = 'H';
 
 /**
  * Reboot and enter firmware update mode
@@ -30,7 +28,7 @@ export const hardwareVersion = command('H');
  * Answer:
  * no answer is sent. The device enters bootloader mode
  */
-export const update = command('F,UPDATE');
+export const update = 'F,UPDATE';
 
 /**
  * Reset the interface by forcing a reboot
@@ -40,13 +38,13 @@ export const update = command('F,UPDATE');
  * Answer:
  * No answer is sent. The device reboots.
  */
-export const reset = command('F,RESET');
+export const reset = 'F,RESET';
 
 /**
  * Revert to default configuration
  * To roll back to default settings (nothing configured), issue the following command
  */
-export const revert = command('F,REVERT');
+export const revert = 'F,REVERT';
 
 /**
  * Set license code
@@ -55,7 +53,7 @@ export const revert = command('F,REVERT');
  * f,ACK license has been set
  * f,NACK license code is not valid (or not applicable)
  */
-export const set = licenseCode => command(`F,SET,${licenseCode}`);
+export const set = licenseCode => `F,SET,${licenseCode}`;
 
 /**
  * Modify Relay State
@@ -72,4 +70,4 @@ export const set = licenseCode => command(`F,SET,${licenseCode}`);
  * L,2: activate relay 2
  * L,3: activate both relays
  */
-export const modifyRelayState = state => command(`L,${state}`);
+export const modifyRelayState = state => `L,${state}`;

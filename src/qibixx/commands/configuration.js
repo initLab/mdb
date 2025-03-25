@@ -1,5 +1,3 @@
-import { command } from './util.js';
-
 /**
  * Set RS232 Interface Baudrate (MDB USB Plus & MDB USB Ultra versions only)
  *
@@ -20,7 +18,7 @@ import { command } from './util.js';
  * Description:
  * Sets the serial port (RS232) Baudrate. Default (0) means serial port disabled.
  */
-export const setRs232Baudrate = baudrate => command(`F,SERIAL,${baudrate}`);
+export const setRs232Baudrate = baudrate => `F,SERIAL,${baudrate}`;
 
 /**
  * Set the response timeout (milliseconds)
@@ -32,9 +30,9 @@ export const setRs232Baudrate = baudrate => command(`F,SERIAL,${baudrate}`);
  * While in master mode, the MDB interface, will wait this amount of time, before it assumes the peripheral does not answer the POLLS and therefore, is disconnected. This value, by standard, will be 5ms, but many "modern" Peripherals are much slower. The timeout value can be configured in a range from 10 to 1000.
  * If you have problems with a peripheral, try to set the value to 1000.
  */
-export const respTimeout = timeout => command(`F,RESPTIMEOUT,${timeout}`);
+export const respTimeout = timeout => `F,RESPTIMEOUT,${timeout}`;
 
-export const disableCashlessSlave = command('C,0');
+export const disableCashlessSlave = 'C,0';
 
 /**
  * Set Cashless Slave Parameter
@@ -51,7 +49,7 @@ export const disableCashlessSlave = command('C,0');
  * Description:
  * Assigns value to parameter. The list of possible parameters is presented in the table below. To confirm the respective possible values, please check MDB specification.
  */
-export const setCashlessSlaveParameter = (parameter, value) => command(`C,SETCONF,${parameter}=${value}`);
+export const setCashlessSlaveParameter = (parameter, value) => `C,SETCONF,${parameter}=${value}`;
 
 /**
  * Set Cashless Master Parameter
@@ -62,4 +60,4 @@ export const setCashlessSlaveParameter = (parameter, value) => command(`C,SETCON
  * Description:
  * Assigns value to parameter. The list of possible parameters is presented in the table below. To confirm the respective possible values, please check MDB specification.
  */
-export const setCashlessMasterParameter = (parameter, value) => command(`D,SETCONF,${parameter}=${value}`);
+export const setCashlessMasterParameter = (parameter, value) => `D,SETCONF,${parameter}=${value}`;

@@ -1,5 +1,3 @@
-import { command } from './util.js';
-
 /**
  * Sniff (Telemetry)
  *
@@ -10,5 +8,5 @@ import { command } from './util.js';
  * Answer:
  * x,ACK
  */
-export const enableMdbSniffing = command('X,1');
-export const disableMdbSniffing = command('X,0');
+export const enableMdbSniffing = 'X,1';
+export const disableMdbSniffing = 'X,0';

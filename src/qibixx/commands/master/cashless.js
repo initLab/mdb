@@ -1,5 +1,3 @@
-import { command } from '../util.js';
-
 /**
  * Enable/Disable Cashless Master
  * Prior to initiating transactions with the MDB Bus, it is necessary to Enable the Cashless Master. Specifically for Cashless Devices, in addition to "Idle" Mode, it is also possible to enable the Device in "Always Idle" Mode.
@@ -8,9 +6,9 @@ import { command } from '../util.js';
  *
  * "Always Idle"/Selection First Mode (direct vend), the Master can request the credit to the Cashless Slave first, and therefore it will start the session (In a real terminal, the user would select the product first on the machine, and then swipe the card to confirm the requested amount).
  */
-export const disableCashlessMaster = command('D,0');
-export const enableCashlessMasterAuthorizeFirst = command('D,1');
-export const enableCashlessMasterAlwaysIdle = command('D,2');
+export const disableCashlessMaster = 'D,0';
+export const enableCashlessMasterAuthorizeFirst = 'D,1';
+export const enableCashlessMasterAlwaysIdle = 'D,2';
 
 /**
  * Start polling for the Cashless Reader
@@ -22,32 +20,32 @@ export const enableCashlessMasterAlwaysIdle = command('D,2');
  * d,STATUS,IDLE
  * d,ERR,"-1" # Cashless Slave is not enabled to start polling
  */
-export const startPollingCashlessReader = command('D,READER,1');
+export const startPollingCashlessReader = 'D,READER,1';
 
 /**
  * Request Credit
  * The following command is used to send a request to the Cashless Slave. When the Cashless Master is configured in "Idle" Mode, this command should be preceded by a start session command (further info in Cashless Peripheral ). If the Cashless Master is configured in "Always Idle" Mode, the instruction below will trigger a "Start" operation on the slave.
  */
 
-export const requestCredit = (amount, product) => command(`D,REQ,${amount},${product}`);
+export const requestCredit = (amount, product) => `D,REQ,${amount},${product}`;
 
 /**
  * Cancel a pending vending request
  */
-export const cancelPendingVendingRequest = command('D,REQ,-1');
+export const cancelPendingVendingRequest = 'D,REQ,-1';
 
 /**
  * End and finalize a transaction
  */
-export const endAndFinalizeTransaction = (softwareVersion, productId) => command(`D,END${
+export const endAndFinalizeTransaction = (softwareVersion, productId) => `D,END${
     softwareVersion.major > 3 || softwareVersion.major === 3 && softwareVersion.minor >= 8 ?
         `,${productId}` : ''
-}`);
+}`;
 
 /**
  * End and revert a transaction
  */
-export const endAndRevertTransaction = command('D,END,-1');
+export const endAndRevertTransaction = 'D,END,-1';
 
 /**
  * Cashless master answers
@@ -88,7 +86,7 @@ export const endAndRevertTransaction = command('D,END,-1');
  * NOTE: Even if you start with D,2 but the machine does not support it, it will display 1
  */
 
-export const getCashlessStatusFromMaster = command('D,STATUS');
+export const getCashlessStatusFromMaster = 'D,STATUS';
 
 /**
  * Examples

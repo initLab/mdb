@@ -1,4 +1,4 @@
-import { command, toHexByte } from '../util.js';
+import { toHexByte } from '../util.js';
 
 /**
  * Master Command Group
@@ -7,8 +7,8 @@ import { command, toHexByte } from '../util.js';
  * The M command is used to start or stop Master Mode. On the Pi Hat interface starting Master Mode will automatically set the slave (RX) interface pull-up to active so that slaves can answer to the master.
  * Stopping Master Mode will disable the pull-up on the RX interface line.
  */
-export const enableGenericMaster = command('M,1');
-export const disableGenericMaster = command('M,0');
+export const enableGenericMaster = 'M,1';
+export const disableGenericMaster = 'M,0';
 
 /**
  * Request Command Group (used for Master implementation)
@@ -16,10 +16,10 @@ export const disableGenericMaster = command('M,0');
  */
 export const requestCommandGroup = (slave, data = []) => {
     const hexData = data.map(toHexByte).join('');
-    return command(`R,${toHexByte(slave)}${hexData.length ? `,${hexData}` : ''}`);
+    return `R,${toHexByte(slave)}${hexData.length ? `,${hexData}` : ''}`;
 };
 
 /**
  * Issue a bus reset condition to the MDB Bus
  */
-export const busReset = command('R,RESET');
+export const busReset = 'R,RESET';
