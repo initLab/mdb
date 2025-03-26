@@ -33,7 +33,7 @@ export const update = 'F,UPDATE';
 /**
  * Reset the interface by forcing a reboot
  *
- * This command, although accepted in the MDB-Pi Hat (Standard and Plus), does not reboot the interface. The interface can be rebooted by rebooting the Pi Hat (power cycle) or alternatively by toggling Raspberry's GPIO6 (setting to 0 to shutdown, and back to 1 to turn it back on).
+ * This command, although accepted in the MDB-Pi Hat (Standard and Plus), does not reboot the interface. The interface can be rebooted by rebooting the Pi Hat (power cycle) or alternatively by toggling Raspberry's GPIO6 (setting to 0 to shut down, and back to 1 to turn it back on).
  *
  * Answer:
  * No answer is sent. The device reboots.

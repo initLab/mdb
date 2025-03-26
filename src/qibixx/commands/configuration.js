@@ -37,7 +37,7 @@ export const disableCashlessSlave = 'C,0';
 /**
  * Set Cashless Slave Parameter
  *
- * Many "modern" peripherals do not answer within the default answer time (first character must be send within 5ms). If you have trouble with a device, adjust the timeout with the F,RESPTIMEOUT, command documented above.
+ * Many "modern" peripherals do not answer within the default answer time (first character must be sent within 5ms). If you have trouble with a device, adjust the timeout with the F,RESPTIMEOUT, command documented above.
  *
  * To perform configurations on the cashless peripheral, it is necessary to disable the cashless peripheral first. That can be done by issuing the following command above.
  *
