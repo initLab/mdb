@@ -1,48 +1,17 @@
-import { Channel } from './serialport/channel.js';
-import { RequestFrameTransform } from './qibixx/transform/requestFrame.js';
-import { RequestMessageTransform } from './qibixx/transform/requestMessage.js';
-import { ResponseFrameTransform } from './qibixx/transform/responseFrame.js';
-import { ResponseMessageTransform } from './qibixx/transform/responseMessage.js';
-import { on } from 'node:events';
+import { Device } from './qibixx/index.js';
 
 const path = '/dev/mdb-hat';
-const channel = new Channel({
-    path,
-    baudRate: 115200,
-});
+const device = new Device(path);
+await device.connect();
 
-const requestMessageTransform = new RequestMessageTransform();
-const requestFrameTransform = new RequestFrameTransform();
-const responseFrameTransform = new ResponseFrameTransform();
-const responseMessageTransform = new ResponseMessageTransform();
+console.log(device.versions);
 
-requestMessageTransform
-    .pipe(requestFrameTransform)
-    .pipe(channel.stream)
-    .pipe(responseFrameTransform)
-    .pipe(responseMessageTransform);
+await device.setGenericMaster(true);
 
-await channel.connect();
-const softwareVersion = await simpleCommand('softwareVersion');
-console.log(softwareVersion);
-const hardwareVersion = await simpleCommand('hardwareVersion');
-console.log(hardwareVersion);
-await channel.disconnect();
+const coinChangerFound = await device.sendGenericMaster(0x08);
+console.log('coinChangerFound', coinChangerFound);
 
-async function simpleCommand(type) {
-    requestMessageTransform.write({
-        type,
-    });
+const billValidatorFound = await device.sendGenericMaster(0x30);
+console.log('billValidatorFound', billValidatorFound);
 
-    const signal = AbortSignal.timeout(20);
-
-    for await (const event of on(responseMessageTransform, 'data', {
-        signal,
-    })) {
-        const [ message ] = event;
-
-        if (message?.type === type) {
-            return message;
-        }
-    }
-}
+await device.disconnect();
