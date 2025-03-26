@@ -140,7 +140,7 @@ export class Device {
             const [ response ] = event;
 
             if (response?.type === request.type) {
-                return response;
+                return response?.params;
             }
         }
     }

@@ -20,27 +20,35 @@ export class ResponseMessageTransform extends Transform {
             case 'v':
                 callback(null, {
                     type: 'softwareVersion',
-                    version: parseVersion(parts[1]),
-                    cpuId: parts[2],
+                    params: {
+                        version: parseVersion(parts[1]),
+                        cpuId: parts[2],
+                    },
                 });
                 break;
             case 'h':
                 callback(null, {
                     type: 'hardwareVersion',
-                    version: parseVersion(parts[1]),
-                    capabilities: parts[2],
+                    params: {
+                        version: parseVersion(parts[1]),
+                        capabilities: parts[2],
+                    },
                 });
                 break;
             case 'm':
                 callback(null, {
                     type: 'setGenericMaster',
-                    success: parseAnswer(parts[1]),
+                    params: {
+                        success: parseAnswer(parts[1]),
+                    },
                 });
                 break;
             case 'p':
                 callback(null, {
                     type: 'genericMasterRequestCommandGroup',
-                    answer: parseAnswer(parts[1], true),
+                    params: {
+                        answer: parseAnswer(parts[1], true),
+                    },
                 });
                 break;
             default:
