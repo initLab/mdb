@@ -75,10 +75,7 @@ export class Device {
         }
 
         if (enabled) {
-            await this.#writeAndDrain({
-                type: 'genericMasterBusReset',
-            });
-            await sleep(100);
+            await this.#genericMasterBusReset();
         }
     }
 
@@ -90,6 +87,16 @@ export class Device {
         });
 
         return response.answer;
+    }
+
+    async #genericMasterBusReset() {
+        await this.#writeAndDrain({
+            type: 'genericMasterBusReset',
+        });
+
+        // t(break) = 100 ms
+        // t(setup) = 200 ms
+        await sleep(100 + 200);
     }
 
     async #simpleCommand(type) {
