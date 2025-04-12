@@ -42,7 +42,7 @@ export class Device {
         await this.#channel.connect();
         await this.#resetAndDisconnect();
 
-        // TODO
+        // TODO wait until port reappears
         await sleep(1_000);
 
         await this.#channel.connect();
@@ -54,6 +54,7 @@ export class Device {
     }
 
     async disconnect() {
+        this.#versions = null;
         await this.#channel.disconnect();
     }
 
