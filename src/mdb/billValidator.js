@@ -147,7 +147,7 @@ export function parsePollResponse(hex) {
         throw new Error('Invalid poll response length, expected 16 or less bytes, got ' + bytes.length);
     }
 
-    return bytes.map(parseBillValidatorActivity);
+    return Array.from(bytes).map(parseBillValidatorActivity);
 }
 
 console.log(parsePollResponse('808182838485'));
