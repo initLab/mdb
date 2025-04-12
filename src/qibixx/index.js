@@ -138,11 +138,12 @@ export class Device {
     }
 
     async #poll(request, timeout = 100) {
-        await this.#writeAndDrain(request);
         const signal = AbortSignal.timeout(timeout);
         const events = on(this.#outputStream, 'data', {
             signal,
         });
+
+        await this.#writeAndDrain(request);
 
         for await (const event of events) {
             const [ response ] = event;
