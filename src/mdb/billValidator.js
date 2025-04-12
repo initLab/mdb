@@ -150,7 +150,7 @@ export function parsePollResponse(hex) {
     return Array.from(bytes).map(parseBillValidatorActivity);
 }
 
-console.log(parsePollResponse('808182838485'));
+// console.log(parsePollResponse('069091929380818283a0a1a2a3'));
 
 function parseFtlResponse(bytes) {
     switch (bytes[0]) {
