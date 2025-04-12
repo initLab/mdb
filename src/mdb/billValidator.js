@@ -175,26 +175,39 @@ function parseFtlResponse(bytes) {
 
 function parseBillValidatorActivity(byte) {
     if ((byte & 0xF0) === 0x00) {
-        // TODO check if exists
+        // Bill validator
+        if (!Object.hasOwn(billValidatorStatuses, byte)) {
+            throw new Error('Unsupported bill validator status: ' + byte);
+        }
+
         return billValidatorStatuses[byte];
     }
 
-    if ((byte & 0x10) === 0x10) {
+    if ((byte & 0xF0) === 0x10) {
         throw new Error('Unexpected FTL response in bill validator activity');
     }
 
-    if ((byte & 0x20) === 0x20) {
-        // TODO check if exists
+    if ((byte & 0xF0) === 0x20) {
+        // Bill recycler
+        if (!Object.hasOwn(billRecyclerStatuses, byte)) {
+            throw new Error('Unsupported bill recycler status: ' + byte);
+        }
+
         return billRecyclerStatuses[byte];
     }
 
-    if ((byte & 0xe0) === 0x40) {
+    if ((byte & 0xE0) === 0x40) {
+        // Number of attempts to input a bill while validator is disabled.
+        const numberOfAttempts = byte & 0x1F;
+
         return {
-            // TODO
+            type: 'INPUT_BILL_WHILE_DISABLED',
+            numberOfAttempts,
         };
     }
 
     if ((byte & 0x80) === 0x80) {
+        // Bills accepted
         const billRoutingCode = (byte & 0x70) >> 4;
         const billRouting = billRoutingCodes[billRoutingCode];
         const billType = (byte & 0x0F);
