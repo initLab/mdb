@@ -1,6 +1,72 @@
 import { hexToBuffer, toInt } from '../util/index.js';
 import { readByteArray, splitToBits } from './util.js';
 
+const billRoutingCodes = {
+    0b000: 'BILL_STACKED',
+    0b001: 'ESCROW_POSITION',
+    0b010: 'BILL_RETURNED',
+    0b011: 'BILL_TO_RECYCLER',
+    0b100: 'DISABLED_BILL_REJECTED',
+    0b101: 'BILL_TO_RECYCLER_MANUAL_FILL',
+    0b110: 'MANUAL_DISPENSE',
+    0b111: 'TRANSFERRED_FROM_RECYCLER_TO_CASHBOX',
+};
+
+const billValidatorStatuses = {
+    0b00000001: {
+        type: 'DEFECTIVE_MOTOR',
+        description: 'One of the motors has failed to perform its expected assignment.',
+    },
+    0b00000010: {
+        type: 'SENSOR_PROBLEM',
+        description: 'One of the sensors has failed to provide its response.',
+    },
+    0b00000011: {
+        type: 'VALIDATOR_BUSY',
+        description: 'The validator is busy and can not answer a detailed command right now.',
+    },
+    0b00000100: {
+        type: 'ROM_CHECKSUM_ERROR',
+        description: 'The validators internal checksum does not match the calculated checksum.',
+    },
+    0b00000101: {
+        type: 'VALIDATOR_JAMMED',
+        description: 'A bill(s) has jammed in the acceptance path.',
+    },
+    0b00000110: {
+        type: 'VALIDATOR_WAS_RESET',
+        description: 'The validator has been reset since the last POLL.',
+    },
+    0b00000111: {
+        type: 'BILL_REMOVED',
+        description: 'A bill in the escrow position has been removed by an unknown means. A BILL RETURNED message should also be sent.',
+    },
+    0b00001000: {
+        type: 'CASH_BOX_OUT_OF_POSITION',
+        description: 'The validator has detected the cash box to be open or removed.',
+    },
+    0b00001001: {
+        type: 'VALIDATOR_DISABLED',
+        description: 'The validator has been disabled, by the VMC or because of internal conditions.',
+    },
+    0b00001010: {
+        type: 'INVALID_ESCROW_REQUEST',
+        description: 'An ESCROW command was requested for a bill not in the escrow position.',
+    },
+    0b00001011: {
+        type: 'BILL_REJECTED',
+        description: 'A bill was detected, but rejected because it could not be identified.',
+    },
+    0b00001100: {
+        type: 'POSSIBLE_CREDITED_BILL_REMOVAL',
+        description: 'There has been an attempt to remove a credited (stacked) bill.',
+    },
+};
+
+const billRecyclerStatuses = {
+
+};
+
 export function parseSetupResponse(hex) {
     const bytes = hexToBuffer(hex);
 
@@ -25,6 +91,121 @@ export function parseSetupResponse(hex) {
 }
 
 // console.log(parseSetupResponse('021975006402012cffffff02050a14326400000000000000000000'));
+
+export function parsePollResponse(hex) {
+    const bytes = hexToBuffer(hex);
+
+    if ((bytes[0] & 0xF0) === 0x10) {
+        return parseFtlResponse(bytes);
+    }
+
+    if (bytes.length > 16) {
+        throw new Error('Invalid poll response length, expected 16 or less bytes, got ' + bytes.length);
+    }
+
+    return bytes.map(parseBillValidatorActivity);
+}
+
+console.log(parsePollResponse('808182838485'));
+
+function parseFtlResponse(bytes) {
+    switch (bytes[0]) {
+        case 0x1B:
+            if (bytes.length !== 6) {
+                throw new Error('Invalid FTL REQ TO RCV length, got ' + bytes.length + ', expected 6');
+            }
+
+            return {
+                type: 'REQ_TO_RCV',
+                destinationAddressOfResponse: bytes[1],
+                sourceAddressOfResponse: bytes[2],
+                fileId: bytes[3],
+                maximumLength: bytes[4],
+                control: bytes[5],
+            };
+        case 0x1C:
+            if (bytes.length !== 4) {
+                throw new Error('Invalid FTL RETRY/DENY length, got ' + bytes.length + ', expected 4');
+            }
+
+            return {
+                type: 'RETRY_DENY',
+                destinationAddressOfResponse: bytes[1],
+                sourceAddressOfResponse: bytes[2],
+                retryDelay: bytes[3],
+            };
+        case 0x1D:
+            if (bytes.length < 4 || bytes.length > 34) {
+                throw new Error('Invalid FTL SEND BLOCK length, got ' + bytes.length + ', expected 4-34');
+            }
+
+            return {
+                type: 'SEND_BLOCK',
+                destinationAddressOfData: bytes[1],
+                blockNumber: bytes[2],
+                data: bytes.subarray(3),
+            };
+        case 0x1E:
+            if (bytes.length !== 3) {
+                throw new Error('Invalid FTL OK TO SEND length, got ' + bytes.length + ', expected 3');
+            }
+
+            return {
+                type: 'OK_TO_SEND',
+                destinationAddressOfResponse: bytes[1],
+                sourceAddressOfResponse: bytes[2],
+            };
+        case 0x1F:
+            if (bytes.length !== 6) {
+                throw new Error('Invalid FTL REQ TO SEND length, got ' + bytes.length + ', expected 6');
+            }
+
+            return {
+                type: 'REQ_TO_SEND',
+                destinationAddressOfResponse: bytes[1],
+                sourceAddressOfResponse: bytes[2],
+                fileId: bytes[3],
+                maximumLength: bytes[4],
+                control: bytes[5],
+            };
+        default:
+            throw new Error('Unsupported FTL response: ' + bytes[0]);
+    }
+}
+
+function parseBillValidatorActivity(byte) {
+    if ((byte & 0xF0) === 0x00) {
+        // TODO check if exists
+        return billValidatorStatuses[byte];
+    }
+
+    if ((byte & 0x10) === 0x10) {
+        throw new Error('Unexpected FTL response in bill validator activity');
+    }
+
+    if ((byte & 0x20) === 0x20) {
+        // TODO check if exists
+        return billRecyclerStatuses[byte];
+    }
+
+    if ((byte & 0xe0) === 0x40) {
+        return {
+            // TODO
+        };
+    }
+
+    if ((byte & 0x80) === 0x80) {
+        const billRoutingCode = (byte & 0x70) >> 4;
+        const billRouting = billRoutingCodes[billRoutingCode];
+        const billType = (byte & 0x0F);
+
+        return {
+            type: 'BILLS_ACCEPTED',
+            billRouting,
+            billType,
+        };
+    }
+}
 
 export function parseStackerResponse(hex) {
     const bytes = hexToBuffer(hex);
