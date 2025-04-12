@@ -26,7 +26,7 @@ const billValidatorStatuses = {
         description: 'The validator is busy and can not answer a detailed command right now.',
     },
     0b00000100: {
-        type: 'ROM_CHECKSUM_ERROR',
+        type: 'VALIDATOR_ROM_CHECKSUM_ERROR',
         description: 'The validators internal checksum does not match the calculated checksum.',
     },
     0b00000101: {
@@ -64,7 +64,51 @@ const billValidatorStatuses = {
 };
 
 const billRecyclerStatuses = {
-
+    0b00100001: {
+        type: 'ESCROW_REQUEST',
+        description: 'An escrow lever activation has been detected. If a button is present and activated.',
+    },
+    0b00100010: {
+        type: 'DISPENSER_PAYOUT_BUSY',
+        description: 'The dispenser is busy activating payout devices.',
+    },
+    0b00100011: {
+        type: 'DISPENSER_BUSY',
+        description: 'The dispenser is busy and can not answer a detailed command right now.',
+    },
+    0b00100100: {
+        type: 'DEFECTIVE_DISPENSER_SENSOR',
+        description: 'The dispenser has detected one of the dispenser sensors behaving abnormally.',
+    },
+    // 0b00100101: not used
+    0b00100110: {
+        type: 'DISPENSER_DID_NOT_START',
+        description: 'Dispenser did not start / motor problem.',
+    },
+    0b00100111: {
+        type: 'DISPENSER_JAM',
+        description: 'A dispenser payout attempt has resulted in jammed condition.',
+    },
+    0b00101000: {
+        type: 'RECYCLER_ROM_CHECKSUM_ERROR',
+        description: 'The dispensers internal checksum does not match the calculated checksum. (If separate from validator microprocessor.)',
+    },
+    0b00101001: {
+        type: 'DISPENSER_DISABLED',
+        description: 'Dispenser disabled because of error or bill in escrow position.',
+    },
+    0b00101010: {
+        type: 'BILL_WAITING',
+        description: 'Bill waiting for customer removal.',
+    },
+    // 0b00101011: not used
+    // 0b00101100: not used
+    // 0b00101101: not used
+    // 0b00101110: not used
+    0b00101111: {
+        type: 'FILLED_KEY_PRESSED',
+        description: 'The VMC should request a new DISPENSER STATUS.',
+    },
 };
 
 export function parseSetupResponse(hex) {
