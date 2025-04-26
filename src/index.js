@@ -68,8 +68,15 @@ if (billValidatorFound) {
         for (const event of parsedPollResponse) {
             if (event?.type === 'BILLS_ACCEPTED' && event?.billRouting === 'ESCROW_POSITION') {
                 console.log('Inserted bill of type ' + event?.billType);
-                const escrowResponse = await device.sendGenericMaster(0x35, [0x00]);
-                console.log(escrowResponse ? 'Returned' : 'Failed to return');
+                const accept = 0x00;
+                const escrowResponse = await device.sendGenericMaster(0x35, [accept]);
+
+                if (accept) {
+                    console.log(escrowResponse ? 'Accepted' : 'Failed to accept');
+                }
+                else {
+                    console.log(escrowResponse ? 'Returned' : 'Failed to return');
+                }
             }
         }
     }
