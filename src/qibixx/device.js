@@ -71,13 +71,11 @@ export class Device {
             enabled,
         });
 
-        if (!response.success) {
-            throw new Error(`Failed to set generic master mode to ${enabled}`);
-        }
-
-        if (enabled) {
+        if (response.success && enabled) {
             await this.#genericMasterBusReset();
         }
+
+        return response.success;
     }
 
     async sendGenericMaster(slave, data) {
