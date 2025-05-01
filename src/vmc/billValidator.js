@@ -160,50 +160,54 @@ export class BillValidator {
 
         // TODO add security response to this.#status
 
-        const expansionIdentificationResponse = await this.expansionIdentification();
+        if (this.#status.billValidator.billValidatorFeatureLevel === 1) {
+            const expansionIdentificationResponse = await this.expansionIdentification();
 
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('EXP.ID.1', expansionIdentificationResponse);
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('EXP.ID.1', expansionIdentificationResponse);
+            }
+
+            if (typeof expansionIdentificationResponse !== 'object') {
+                throw new Error('Invalid expansion identification response');
+            }
+
+            this.#status.billValidator = {
+                ...this.#status.billValidator,
+                ...expansionIdentificationResponse,
+            };
         }
 
-        if (typeof expansionIdentificationResponse !== 'object') {
-            throw new Error('Invalid expansion identification response');
+        if (this.#status.billValidator.billValidatorFeatureLevel >= 2) {
+            const expansionIdentificationWithOptionBitsResponse = await this.expansionIdentificationWithOptionBits();
+
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('EXP.ID.2', expansionIdentificationWithOptionBitsResponse);
+            }
+
+            if (typeof expansionIdentificationWithOptionBitsResponse !== 'object') {
+                throw new Error('Invalid expansion identification with option bits response');
+            }
+
+            this.#status.billValidator = {
+                ...this.#status.billValidator,
+                ...expansionIdentificationWithOptionBitsResponse,
+            };
+
+            const billRecyclingSupported = expansionIdentificationWithOptionBitsResponse.optionalFeatures.billRecycling;
+            const optionalFeatures = billRecyclingSupported ? billValidatorOptionalFeatures.billRecycling : 0;
+
+            const expansionFeatureEnableResponse = await this.expansionFeatureEnable(optionalFeatures);
+
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('EXP.FEAT.ENABLE', expansionFeatureEnableResponse);
+            }
+
+            if (expansionFeatureEnableResponse !== true) {
+                throw new Error('Invalid expansion feature enable response');
+            }
         }
 
-        this.#status.billValidator = {
-            ...this.#status.billValidator,
-            ...expansionIdentificationResponse,
-        };
-
-        const expansionIdentificationWithOptionBitsResponse = await this.expansionIdentificationWithOptionBits();
-
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('EXP.ID.2', expansionIdentificationWithOptionBitsResponse);
-        }
-
-        if (typeof expansionIdentificationWithOptionBitsResponse !== 'object') {
-            throw new Error('Invalid expansion identification with option bits response');
-        }
-
-        this.#status.billValidator = {
-            ...this.#status.billValidator,
-            ...expansionIdentificationWithOptionBitsResponse,
-        };
-
-        const billRecyclingSupported = expansionIdentificationWithOptionBitsResponse.optionalFeatures.billRecycling;
-        const optionalFeatures = billRecyclingSupported ? billValidatorOptionalFeatures.billRecycling : 0;
-
-        const expansionFeatureEnableResponse = await this.expansionFeatureEnable(optionalFeatures);
-
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('EXP.FEAT.ENABLE', expansionFeatureEnableResponse);
-        }
-
-        if (expansionFeatureEnableResponse !== true) {
-            throw new Error('Invalid expansion feature enable response');
-        }
-
-        if (billRecyclingSupported) {
+        if (this.#status.billValidator.optionalFeatures?.billRecycling) {
             const recyclerSetupResponse = await this.expansionRecyclerSetup();
 
             if (process.env.NODE_ENV !== 'production') {
