@@ -389,3 +389,23 @@ export function parsePayoutValuePoll(hex) {
 }
 
 // console.log(parsePayoutValuePoll('0000'));
+
+export function parseFtlReqToRcv(hex) {
+    // TODO
+}
+
+export function parseFtlRetryDeny(hex) {
+    // TODO
+}
+
+export function parseFtlSendBlock(hex) {
+    // TODO
+}
+
+export function parseFtlOkToSend(hex) {
+    // TODO
+}
+
+export function parseFtlReqToSend(hex) {
+    // TODO
+}
