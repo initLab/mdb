@@ -373,3 +373,19 @@ export function parsePayoutStatus(hex) {
 }
 
 // console.log(parsePayoutStatus('0000000100000000000000000000000000000000000000000000000000000000'));
+
+export function parsePayoutValuePoll(hex) {
+    const bytes = hexToBuffer(hex);
+
+    if (bytes.length !== 2) {
+        throw new Error('Invalid bill dispense status length, expected 2, got ' + bytes.length);
+    }
+
+    const dispenserPayoutActivity = bytes.readUInt16BE();
+
+    return {
+        dispenserPayoutActivity,
+    };
+}
+
+// console.log(parsePayoutValuePoll('0000'));

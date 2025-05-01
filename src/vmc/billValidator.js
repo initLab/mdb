@@ -4,6 +4,7 @@ import {
     parseLevel1IdentificationWithoutOptionBits,
     parseLevel2PlusIdentificationWithOptionBits,
     parsePayoutStatus,
+    parsePayoutValuePoll,
     parsePollResponse,
     parseRecyclerSetup,
     parseSetupResponse,
@@ -61,8 +62,13 @@ export class BillValidator {
     }
 
     async loop() {
-        // const payoutStatusResponse = await this.expansionPayoutStatus();
-        // console.log('PAYOUT STATUS', payoutStatusResponse);
+        // const payoutValuePollResponse = await this.expansionPayoutValuePoll();
+        // console.log('PAYOUT VALUE POLL', payoutValuePollResponse);
+        //
+        // if (payoutValuePollResponse === true) {
+        //     const payoutStatusResponse = await this.expansionPayoutStatus();
+        //     console.log('PAYOUT STATUS', payoutStatusResponse);
+        // }
 
         const pollResponses = await this.poll();
 
@@ -77,6 +83,7 @@ export class BillValidator {
                     await this.initialize();
                     console.log('Initialize', this.#status);
                     // const dispenseResponse = await this.expansionDispenseBill(1, 1);
+                    // const dispenseResponse = await this.expansionDispenseValue(5);
                     // console.log(dispenseResponse);
                     break;
                 case 'VALIDATOR_BUSY':
@@ -407,5 +414,22 @@ export class BillValidator {
     async expansionPayoutStatus() {
         const response = await this.#vmc.transceive(0x37, [0x08]);
         return typeof response === 'string' ? parsePayoutStatus(response) : response;
+    }
+
+    /*
+     * EXPANSION COMMAND 0x37
+     * SUB-COMMAND 0x09
+     */
+    async expansionPayoutValuePoll() {
+        const response = await this.#vmc.transceive(0x37, [0x09]);
+        return typeof response === 'string' ? parsePayoutValuePoll(response) : response;
+    }
+
+    /*
+     * EXPANSION COMMAND 0x37
+     * SUB-COMMAND 0x0A
+     */
+    async expansionPayoutCancel() {
+        return await this.#vmc.transceive(0x37, [0x0A]);
     }
 }
