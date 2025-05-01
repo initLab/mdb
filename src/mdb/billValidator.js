@@ -1,5 +1,5 @@
 import { hexToBuffer, toInt } from '../util/index.js';
-import { readByteArray, splitToBits } from './util.js';
+import { readByteArray, readShortArray, splitToBits } from './util.js';
 
 const billRoutingCodes = {
     0b000: 'BILL_STACKED',
@@ -109,6 +109,11 @@ const billRecyclerStatuses = {
         type: 'FILLED_KEY_PRESSED',
         description: 'The VMC should request a new DISPENSER STATUS.',
     },
+};
+
+export const billValidatorOptionalFeatures = {
+    ftl: 0x01,
+    billRecycling: 0x02,
 };
 
 export function parseSetupResponse(hex) {
@@ -318,3 +323,37 @@ export function parseLevel2PlusIdentificationWithOptionBits(hex) {
 }
 
 // console.log(parseLevel2PlusIdentificationWithOptionBits('49544c3030303030363138353136314e5631312033383420303030042500000002'));
+
+export function parseRecyclerSetup(hex) {
+    const bytes = hexToBuffer(hex);
+
+    if (bytes.length !== 2) {
+        throw new Error('Invalid recycler setup length, expected 2, got ' + bytes.length);
+    }
+
+    const billTypeRouting = splitToBits(bytes.readUInt16BE(), 16);
+
+    return {
+        billTypeRouting,
+    };
+}
+
+// console.log(parseRecyclerSetup('0002'));
+
+export function parseBillDispenseStatus(hex) {
+    const bytes = hexToBuffer(hex);
+
+    if (bytes.length !== 34) {
+        throw new Error('Invalid bill dispense status length, expected 34, got ' + bytes.length);
+    }
+
+    const dispenserFullStatus = splitToBits(bytes.readUInt16BE(), 16);
+    const billCount = readShortArray(bytes, 2, 16);
+
+    return {
+        dispenserFullStatus,
+        billCount,
+    };
+}
+
+// console.log(parseBillDispenseStatus('00000000000a00000000000000000000000000000000000000000000000000000000'));

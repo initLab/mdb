@@ -1,7 +1,10 @@
 import {
+    billValidatorOptionalFeatures,
+    parseBillDispenseStatus,
     parseLevel1IdentificationWithoutOptionBits,
     parseLevel2PlusIdentificationWithOptionBits,
     parsePollResponse,
+    parseRecyclerSetup,
     parseSetupResponse,
     parseStackerResponse,
 } from '../mdb/billValidator.js';
@@ -134,7 +137,10 @@ export class BillValidator {
             ...expansionIdentificationWithOptionBitsResponse,
         };
 
-        const expansionFeatureEnableResponse = await this.expansionFeatureEnable(0x02);
+        const billRecyclingSupported = expansionIdentificationWithOptionBitsResponse.optionalFeatures.billRecycling;
+        const optionalFeatures = billRecyclingSupported ? billValidatorOptionalFeatures.billRecycling : 0;
+
+        const expansionFeatureEnableResponse = await this.expansionFeatureEnable(optionalFeatures);
 
         if (process.env.NODE_ENV !== 'production') {
             console.log('EXP.FEAT.ENABLE', expansionFeatureEnableResponse);
@@ -167,6 +173,41 @@ export class BillValidator {
 
         if (billTypeResponse !== true) {
             throw new Error('Invalid bill type response');
+        }
+
+        if (billRecyclingSupported) {
+            const recyclerSetupResponse = await this.expansionRecyclerSetup();
+
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('RECYCLER SETUP', recyclerSetupResponse);
+            }
+
+            if (typeof recyclerSetupResponse !== 'object') {
+                throw new Error('Invalid recycler setup response');
+            }
+
+            const recyclerEnableResponse = await this.expansionRecyclerEnable(
+                0x0000,
+                Array(16).fill(0x03),
+            );
+
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('RECYCLER ENABLE', recyclerEnableResponse);
+            }
+
+            if (recyclerEnableResponse !== true) {
+                throw new Error('Invalid recycler enable response');
+            }
+
+            const billDispenseResponse = await this.expansionBillDispenseStatus();
+
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('BILL DISPENSE STATUS', billDispenseResponse);
+            }
+
+            if (typeof billDispenseResponse !== 'object') {
+                throw new Error('Invalid recycler enable response');
+            }
         }
     }
 
@@ -280,15 +321,38 @@ export class BillValidator {
             response;
     }
 
+    /*
+     * EXPANSION COMMAND 0x37
+     * SUB-COMMAND 0x03
+     */
+    async expansionRecyclerSetup() {
+        const response = await this.#vmc.transceive(0x37, [0x03]);
+        return typeof response === 'string' ? parseRecyclerSetup(response) : response;
+    }
+
+    /*
+     * EXPANSION COMMAND 0x37
+     * SUB-COMMAND 0x04
+     */
+    async expansionRecyclerEnable(manualDispenseEnable, billsRecyclerEnabled) {
+        return await this.#vmc.transceive(0x37, [
+            0x04,
+            (manualDispenseEnable >> 8) & 0xFF, manualDispenseEnable & 0xFF,
+            ...billsRecyclerEnabled,
+        ]);
+    }
+
+    /*
+     * EXPANSION COMMAND 0x37
+     * SUB-COMMAND 0x05
+     */
+    async expansionBillDispenseStatus() {
+        const response = await this.#vmc.transceive(0x37, [0x05]);
+        return typeof response === 'string' ? parseBillDispenseStatus(response) : response;
+    }
+
     // TODO
     /*
-    const x3703 = await device.sendGenericMaster(0x37, [0x03, 0xFF, 0xFF]);
-    console.log('x3703', x3703);
-    const x3704 = await device.sendGenericMaster(0x37, [0x04, 0xFF, 0xFF, 0x03, 0x03, 0x03,
-     0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03]);
-    console.log('x3704', x3704);
-    const x3705 = await device.sendGenericMaster(0x37, [0x05]);
-    console.log('x3705', x3705);
     const x3706 = await device.sendGenericMaster(0x37, [0x06, 0x01, 0x00, 0x02]);
     console.log('x3706', x3706);
     */
