@@ -391,7 +391,7 @@ export class BillValidator {
 
     /*
      * EXPANSION COMMAND 0x37
-     * SUB-COMMAND 0x06
+     * SUB-COMMAND 0x07
      */
     async expansionDispenseValue(valueOfBills) {
         return await this.#vmc.transceive(0x37, [
@@ -402,7 +402,7 @@ export class BillValidator {
 
     /*
      * EXPANSION COMMAND 0x37
-     * SUB-COMMAND 0x06
+     * SUB-COMMAND 0x08
      */
     async expansionPayoutStatus() {
         const response = await this.#vmc.transceive(0x37, [0x08]);
