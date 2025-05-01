@@ -152,7 +152,7 @@ export class BillValidator {
             ...setupResponse,
         };
 
-        const securityResponse = await this.security();
+        const securityResponse = await this.security(0xFFFF);
 
         if (process.env.NODE_ENV !== 'production') {
             console.log('SECURITY', securityResponse);
@@ -285,8 +285,10 @@ export class BillValidator {
     /*
      * SECURITY 0x32
      */
-    async security() {
-        throw new Error('Bill validator security is not implemented');
+    async security(billTypes) {
+        return await this.#vmc.transceive(0x32, [
+            (billTypes >> 8) & 0xFF, billTypes & 0xFF,
+        ]);
     }
 
     /*
