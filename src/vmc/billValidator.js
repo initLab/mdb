@@ -115,6 +115,28 @@ export class BillValidator {
     }
 
     async initialize() {
+        await this.resetSequence();
+        await this.enableSequence();
+
+        if (this.#status.billValidator.optionalFeatures?.billRecycling) {
+            const billDispenseResponse = await this.expansionBillDispenseStatus();
+
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('BILL DISPENSE STATUS', billDispenseResponse);
+            }
+
+            if (typeof billDispenseResponse !== 'object') {
+                throw new Error('Invalid recycler enable response');
+            }
+
+            this.#status.billRecycler = {
+                ...this.#status.billRecycler,
+                ...billDispenseResponse,
+            };
+        }
+    }
+
+    async resetSequence() {
         const setupResponse = await this.setup();
 
         if (process.env.NODE_ENV !== 'production') {
@@ -129,6 +151,14 @@ export class BillValidator {
             ...this.#status.billValidator,
             ...setupResponse,
         };
+
+        const securityResponse = await this.security();
+
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('SECURITY', securityResponse);
+        }
+
+        // TODO add security response to this.#status
 
         const expansionIdentificationResponse = await this.expansionIdentification();
 
@@ -173,31 +203,6 @@ export class BillValidator {
             throw new Error('Invalid expansion feature enable response');
         }
 
-        const stackerResponse = await this.stacker();
-
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('STACKER', stackerResponse);
-        }
-
-        if (typeof stackerResponse !== 'object') {
-            throw new Error('Invalid stacker response');
-        }
-
-        this.#status.billValidator = {
-            ...this.#status.billValidator,
-            ...stackerResponse,
-        };
-
-        const billTypeResponse = await this.billType(0xFFFF, 0xFFFF);
-
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('BILL TYPE', billTypeResponse);
-        }
-
-        if (billTypeResponse !== true) {
-            throw new Error('Invalid bill type response');
-        }
-
         if (billRecyclingSupported) {
             const recyclerSetupResponse = await this.expansionRecyclerSetup();
 
@@ -226,21 +231,33 @@ export class BillValidator {
             if (recyclerEnableResponse !== true) {
                 throw new Error('Invalid recycler enable response');
             }
+        }
+    }
 
-            const billDispenseResponse = await this.expansionBillDispenseStatus();
+    async enableSequence() {
+        const stackerResponse = await this.stacker();
 
-            if (process.env.NODE_ENV !== 'production') {
-                console.log('BILL DISPENSE STATUS', billDispenseResponse);
-            }
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('STACKER', stackerResponse);
+        }
 
-            if (typeof billDispenseResponse !== 'object') {
-                throw new Error('Invalid recycler enable response');
-            }
+        if (typeof stackerResponse !== 'object') {
+            throw new Error('Invalid stacker response');
+        }
 
-            this.#status.billRecycler = {
-                ...this.#status.billRecycler,
-                ...billDispenseResponse,
-            };
+        this.#status.billValidator = {
+            ...this.#status.billValidator,
+            ...stackerResponse,
+        };
+
+        const billTypeResponse = await this.billType(0xFFFF, 0xFFFF);
+
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('BILL TYPE', billTypeResponse);
+        }
+
+        if (billTypeResponse !== true) {
+            throw new Error('Invalid bill type response');
         }
     }
 
