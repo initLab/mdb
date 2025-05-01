@@ -3,6 +3,7 @@ import {
     parseBillDispenseStatus,
     parseLevel1IdentificationWithoutOptionBits,
     parseLevel2PlusIdentificationWithOptionBits,
+    parsePayoutStatus,
     parsePollResponse,
     parseRecyclerSetup,
     parseSetupResponse,
@@ -20,27 +21,37 @@ export class BillValidator {
 
     #clear() {
         this.#status = {
-            // setup
-            billValidatorFeatureLevel: null,
-            countryCode: null,
-            currencyCode: null,
-            billScalingFactory: null,
-            decimalPlaces: null,
-            stackerCapacity: null,
-            billSecurityLevels: null,
-            hasEscrow: null,
-            billTypeCredit: null,
+            billValidator: {
+                // setup
+                billValidatorFeatureLevel: null,
+                countryCode: null,
+                currencyCode: null,
+                billScalingFactory: null,
+                decimalPlaces: null,
+                stackerCapacity: null,
+                billSecurityLevels: null,
+                hasEscrow: null,
+                billTypeCredit: null,
 
-            // expansion identification
-            manufacturerCode: null,
-            serialNumber: null,
-            modelNumber: null,
-            softwareVersion: null,
-            optionalFeatures: null,
+                // expansion identification
+                manufacturerCode: null,
+                serialNumber: null,
+                modelNumber: null,
+                softwareVersion: null,
+                optionalFeatures: null,
 
-            // stacker
-            stackerIsFull: null,
-            numberOfBills: null,
+                // stacker
+                stackerIsFull: null,
+                numberOfBills: null,
+            },
+            billRecycler: {
+                // recycler setup
+                billTypeRouting: null,
+
+                // bill dispense status
+                dispenserFullStatus: null,
+                billCount: null,
+            },
         };
     }
 
@@ -50,6 +61,9 @@ export class BillValidator {
     }
 
     async loop() {
+        // const payoutStatusResponse = await this.expansionPayoutStatus();
+        // console.log('PAYOUT STATUS', payoutStatusResponse);
+
         const pollResponses = await this.poll();
 
         if (typeof pollResponses === 'boolean') {
@@ -62,6 +76,8 @@ export class BillValidator {
                     this.#clear();
                     await this.initialize();
                     console.log('Initialize', this.#status);
+                    // const dispenseResponse = await this.expansionDispenseBill(1, 1);
+                    // console.log(dispenseResponse);
                     break;
                 case 'VALIDATOR_BUSY':
                     // do nothing
@@ -102,8 +118,8 @@ export class BillValidator {
             throw new Error('Invalid setup response');
         }
 
-        this.#status = {
-            ...this.#status,
+        this.#status.billValidator = {
+            ...this.#status.billValidator,
             ...setupResponse,
         };
 
@@ -117,8 +133,8 @@ export class BillValidator {
             throw new Error('Invalid expansion identification response');
         }
 
-        this.#status = {
-            ...this.#status,
+        this.#status.billValidator = {
+            ...this.#status.billValidator,
             ...expansionIdentificationResponse,
         };
 
@@ -132,8 +148,8 @@ export class BillValidator {
             throw new Error('Invalid expansion identification with option bits response');
         }
 
-        this.#status = {
-            ...this.#status,
+        this.#status.billValidator = {
+            ...this.#status.billValidator,
             ...expansionIdentificationWithOptionBitsResponse,
         };
 
@@ -160,8 +176,8 @@ export class BillValidator {
             throw new Error('Invalid stacker response');
         }
 
-        this.#status = {
-            ...this.#status,
+        this.#status.billValidator = {
+            ...this.#status.billValidator,
             ...stackerResponse,
         };
 
@@ -186,6 +202,11 @@ export class BillValidator {
                 throw new Error('Invalid recycler setup response');
             }
 
+            this.#status.billRecycler = {
+                ...this.#status.billRecycler,
+                ...recyclerSetupResponse,
+            };
+
             const recyclerEnableResponse = await this.expansionRecyclerEnable(
                 0x0000,
                 Array(16).fill(0x03),
@@ -208,6 +229,11 @@ export class BillValidator {
             if (typeof billDispenseResponse !== 'object') {
                 throw new Error('Invalid recycler enable response');
             }
+
+            this.#status.billRecycler = {
+                ...this.#status.billRecycler,
+                ...billDispenseResponse,
+            };
         }
     }
 
@@ -351,9 +377,35 @@ export class BillValidator {
         return typeof response === 'string' ? parseBillDispenseStatus(response) : response;
     }
 
-    // TODO
     /*
-    const x3706 = await device.sendGenericMaster(0x37, [0x06, 0x01, 0x00, 0x02]);
-    console.log('x3706', x3706);
-    */
+     * EXPANSION COMMAND 0x37
+     * SUB-COMMAND 0x06
+     */
+    async expansionDispenseBill(billType, numberOfBills) {
+        return await this.#vmc.transceive(0x37, [
+            0x06,
+            billType & 0x0F,
+            (numberOfBills >> 8) & 0xFF, numberOfBills & 0xFF,
+        ]);
+    }
+
+    /*
+     * EXPANSION COMMAND 0x37
+     * SUB-COMMAND 0x06
+     */
+    async expansionDispenseValue(valueOfBills) {
+        return await this.#vmc.transceive(0x37, [
+            0x07,
+            (valueOfBills >> 8) & 0xFF, valueOfBills & 0xFF,
+        ]);
+    }
+
+    /*
+     * EXPANSION COMMAND 0x37
+     * SUB-COMMAND 0x06
+     */
+    async expansionPayoutStatus() {
+        const response = await this.#vmc.transceive(0x37, [0x08]);
+        return typeof response === 'string' ? parsePayoutStatus(response) : response;
+    }
 }

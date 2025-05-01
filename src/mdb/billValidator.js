@@ -357,3 +357,19 @@ export function parseBillDispenseStatus(hex) {
 }
 
 // console.log(parseBillDispenseStatus('00000000000a00000000000000000000000000000000000000000000000000000000'));
+
+export function parsePayoutStatus(hex) {
+    const bytes = hexToBuffer(hex);
+
+    if (bytes.length !== 32) {
+        throw new Error('Invalid payout status length, expected 32, got ' + bytes.length);
+    }
+
+    const numberOfBillsPaidOut = readShortArray(bytes, 0, 16);
+
+    return {
+        numberOfBillsPaidOut,
+    };
+}
+
+// console.log(parsePayoutStatus('0000000100000000000000000000000000000000000000000000000000000000'));
