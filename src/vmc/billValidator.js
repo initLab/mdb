@@ -432,4 +432,18 @@ export class BillValidator {
     async expansionPayoutCancel() {
         return await this.#vmc.transceive(0x37, [0x0A]);
     }
+
+    // TODO FTL commands
+    // command 0x37, sub command 0xFA-0xFE
+
+    /*
+     * EXPANSION COMMAND 0x37
+     * SUB-COMMAND 0xFF
+     */
+    async expansionDiagnostics(data = []) {
+        return await this.#vmc.transceive(0x37, [
+            0xFF,
+            ...data,
+        ]);
+    }
 }
